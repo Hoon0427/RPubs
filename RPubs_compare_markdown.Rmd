@@ -1,0 +1,234 @@
+---
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 학원이 성적향상에 도움이 되는가?
+### Hoon
+### 2020-02-23
+
+![시작하세요. 데이터분석 with R](C:\MyRCode\RPubs\Main.jpg)
+
+<br>
+
+<br>
+
+# Overview : 데이터 분석
+### 데이터 분석에 있어서 목적을 명확히 하는 것은 매우 중요하다. 목적을 명확히 함으로써 데이터 가공형태와 분석방법이 결정되기 때문이다. 이를통해 단순한 통계적 표현이나 확인을 넘어 의사결정에 도움이 되는 유의미한 데이터가 만들어지기 때문이다. 그 다음은 분석기법을 선정해야한느데, 크게 "학습하는 데이터(Training Data)의 유무"와 "목적"에 따라 **지도학습(Supervised Learning)**과 **비지도 학습(Unsupervised Learning)**으로 나울 수 있다.
+
+<br>
+
+## 1) 지도학습
+### 학습 데이터(Training Data)를 기반으로 분석을 통해 모델을 도출하고 새로 입력받은 데이터를 모델에 적용해 예측하는 데이터 분석 기법을 말하는 것이다. 예를 들면 간암 발생 환자의 신체정보를 기반으로 간암 발병 확률을 예측할 수 있는 모델을 구성할 수 있다는 식이며, **회귀분석(regression analysis)**, **분류분석(classification)**등이 있다.
+
+<br>
+
+## 2)비지도학습
+### 비지도학습이란, 말 그대로 특정한 답 없이 주어진 데이터를 분석해 자율적으로 답을 찾아가는 분석 기법이다. 모르는 영역이나 새로운 통찰이 필요할 때 비지도학습을 새로운 결과를 확인함으로써 또 다른 가치를 찾아낼 수 있다. 예를 들어 고객 구매내역을 기반으로 마케팅 대상이 될 새로운 고객군을 찾는다거나 구매 패턴을 도출해 내는 것 등이 있다. 이러한 분석 방법으로는 **군집분석(Clustering)**이나 **연관성 분석(Association analysis)**등이 있다.
+
+<br>
+
+# Topic : 학원이 성적 향상에 도움이 됐는가?
+### 아래 간단한 예를 통해 학원에서 수강 전과 후의 성적을 비교해보자. 한눈에 보아도 수강 후의 성적이 조금 더 높음을 알 수 있다. 수강 전의 데이터보다 점수분포가 보다 상향되고, 조금 더 조밀해진 것을 확인할 수 있다. 하지만 이렇게 오른 점수가 우연이 아니라고 이야기하기에는 기준이 명확하지 않고, 사람의 시각 자체가 모양이나 색깔에 대한 인지 오차가 주관적인 부분이기 때문에 이러한 시각화만으로는 한계가 존재한다. 그룹핑하여 그래프를 출력하기 위해 gather() 함수를 사용하였고, formattable()을 통해 보다 분석적인 테이블을 만들어보았다. 
+
+<br>
+
+## 1)패키지 로드 및 데이터 준비
+### 자료를 분석하기에 앞서 필요한 library를 활성화 시키고 데이터를 불러온다.
+
+```{r message=FALSE}
+library(formattable)
+library(ggplot2)
+library(tidyverse)
+
+before_study <- c(34, 76, 76, 63, 73, 75, 67, 78, 81, 53, 58, 81, 77, 80, 43, 65, 76, 63, 54, 64, 85, 54, 70, 71, 71, 55, 40, 78, 76, 100, 51, 93, 64, 42, 63, 61, 82, 67, 98, 59, 63, 84, 50, 67, 80, 83, 66, 86, 57, 48)
+after_study <- c (74, 87, 89, 98, 65, 82, 70, 70, 70, 84, 56, 76, 72, 69, 73, 61, 83, 82, 89, 75, 48, 72, 80, 66, 82, 71, 49, 54, 70, 65, 74, 63, 65, 101, 82, 75, 62, 83, 90, 76, 87, 90, 78, 63, 59, 79, 74, 65, 77, 74)
+```
+
+<br>
+
+## 2)데이터 가공
+### 앞서 만들었던 데이터를 data.frame형식으로 바꿔주고, 이를 다시 cbind()함수로 묶어주자. 그 후 그룹 시각화를 위해 gather()함수를 사용하여 'before_study'와 'after_study'를 study_compare_2에 할당하고 이를 다시 factor화 해주면 기본적인 가공작업은 끝난 것이라고 할 수 있다.
+
+<br>
+
+
+```{r}
+#boxplot(before_study, after_study, names = c("수강 전", "수강 후),
+#       col=c("blue", "red"), main="수강전후 성적비교", xlab= "Status", ylab= "Score")
+study_compare<-data.frame(before_study, after_study)
+study_compare<-cbind("No"=rownames(study_compare), study_compare)
+##tidy gather
+study_compare_2 <- gather(study_compare, 'before_study', 'after_study',
+                          key="compare", value="score")
+study_compare_2$No<-study_compare_2$No %>% as.character() %>% as.numeric()
+
+study_compare_2$compare<-factor(study_compare_2$compare, levels= c("before_study","after_study"))
+```
+
+## 3)시각화
+### ggplot을 통해 상자 그림의 형태로 성적데이터의 최댓값, 최솟값, 중앙값, 사분편차를 시각홯나 모습이다. 상자 그림 가운데는 중앙값을 의미하는데 중앙값만 보아도 수강 후에 성적이 향상되었음을 알 수 있다.
+
+<br>
+
+```{r}
+#ggplot boxplot
+ggplot(study_compare_2, aes(x=compare, y=score, fill=compare)) + geom_boxplot()
+
+```
+
+## 3.2) ggplot line 시각화
+### ggplot을 통해 선형태로 성적데이터를 시각화한 모습이다. before_study 라인을 보면 다소 많은 구간에서 50점 밑으로 쳐져있는 현상을 볼 수 있는 반면에, after_study 라인의 경우 상대적으로 높이 솟아있음을 확인할 수 있다.
+
+<br>
+
+```{r}
+#ggplot line
+ggplot(study_compare_2, aes(x=No, y=score, color=compare)) + geom_line()
+
+```
+
+
+<br>
+
+## 3.3)테이블 시각화
+### Formattable을 사용하여 테이블에 색을 입혀보자. mutate 함수를 사용해서 before와 after차이, 증가/감소를 추가시켰고 이 조건에 따라 색을 입혀놓았다. 가독성 문제로 상위 5개만 표시할것이고, 전체 테이블은 하단에 참고로 넣도록 하겠습니다.
+
+<br>
+
+```{r}
+#증감표 테이플
+
+study_compare %>% 
+  head(5) %>% 
+  mutate(Difference = after_study - before_study) %>%
+  mutate(Change = case_when(
+    Difference > 0 ~ "증가",
+    Difference < 0 ~ "감소",
+    TRUE ~ "변동없음"
+  )) %>%
+  formattable(., list(
+    Difference = formatter("span", style = x ~ ifelse(x > 0,
+                                                      style(color = "Green", font.weight = "bold"), ifelse(x < 0,
+                                                                                                           style(color = "red"),NA))),
+    Change = formatter("span", style = x ~ ifelse(x == "증가",
+                                                  style(color = "Green", font.weight = "bold"), ifelse(x == "감소",
+                                                                                                       style(color = "red"),NA)))
+  )
+  )
+```
+
+<br>
+
+## 4) t-검정에 대하여
+### 데이터 분석 시 여러가지 제약으로 인해 전체(모집단)를 조사하는 것보다 추출된 일부 샘플(표본)을 가지고 모집단을 추정해서 분석하는 경우가 많다. 이렇게 추출된 두 표본을 근거로 그 원천인 모집단을 추정하여 두 모집단이 서로 같은지를 확인하는 기법이 **t-검정(t-test)**이다. 두 기준이 같거나 다르다는 기준은 **"평균"**이다. 간단하게 t-검정에 대해 알아보자.
+
+### **"두 집단의 평균값이 다른가?"**
+
+### 그렇다고 단순히 표본의 산술평균을 바로 비교하는 것은 아니다. t-검정의 목표는 "두 표본의 차이"를 확인하는 것이 아니라 "두 표본의 모집단 간 차이"를 확인하는 것이기 때문이다. 위의 그래프를 통해 예를 들면 점수를 조사한 학생들만의 성적 향상여부를 확인하려는 것이 아니라 조사한 학생들의 점수를 통해 학원 수강생 전체의 성적 향상을 유추하고자 하는 것이다. 물론 전체를 조사한 것이 아니기 때문에 모집단의 분산이나 표준편차의 정확한 값이 무엇인지는 알 수 없다. 그렇기 때문에 t-검정을 위해 한 가지 가정이 필요하다.
+
+### **"두 모집단은 정규분포를 따른다"**
+
+### 하지만 모집단이 정규분포를 따란다는 가정이 막연한 것은 아니다. 만약 표본의 크기가 30개를 넘는다면 중심극한정리에 의해 정규분포를 따른다고 가정할 수 있고, 표본의 크기가 30개 미만이더라도 "Shapiro-Wilk 검정"을 통해 정규성을 검증할 수 있기 때문이다. 또한 키, 몸무게 등 일반적으로 정규분포를 따른다고 인정되는 대상인 경우 별도의 검정 없이 정규분포로 간주하기도 한다.
+
+<br>
+
+### 이러한 가정이 충족된다면 두 표본의 "평균차이"를 두 집단의 "분산정보"로 나눠 t 값을 구하며, t 값이 0에 가까울수록 두 집단 간의 평균차이는 없다고 간주한다. 즉, 두 집단의 분산이 크면 클수록 두 집단의 평균차이는 희석되고 분산이 작으면 작을수록 두 집단의 평균차이는 더 도드라지게 된다.
+
+<br>
+
+## 5)t.test() 함수에 대하여
+### t-검정은 t-test()함수를 사용해 확인할 수 있다. 기본적인 문법은 다음과 같다. **t.test(x,y,paired=TRUE,var,equal=TRUE,alternative="two.dided")** 여기서 paired는 대응표본과 독립표본을 설정하며, var.equal은 비교하는 두 집단의 분산이 같은지 여부를 설정하는 옵션이다. "대응표본"인 경우 하나의 집단에 대해 전/후를 비교하는 것이라서 분산에 대한 고민이 필요없지만 "독립표본"의 경우 집단이 서로 다르기 때문에 **"확률적으로 분산이 같다"**는 전체가 필요하다. 이는 var.test()함수를 통해 확인이 가능하다.
+
+<br>
+
+```{r}
+var_test_vector1 <- c(75,67,78,81,53,71,71,55,40,78,76,42,67,98,59,63,84,50,67,80,83)
+var_test_vector2 <- c(58,81,77,80,76,63,54,64,85,54,70,71,71,55,40,78,76,100,51,42,63,61,82,57,48)
+
+
+var_test_data <- var.test(var_test_vector1,var_test_vector2)
+```
+
+<br>
+
+### var.test()함수의 결과를 보면 p-value가 0.9739601, 즉 귀무가설이 맞을 확률이 97.4%로 두 집단의 분산은 같다고 해설할 수 있다.
+
+<br>
+<br>
+
+### **alternative**의 경우 t-검증을 통해 집단간의 차이를 어떤 기준으로 비교할지 설정하는 옵션이다. 단순히 "두 집단이 다르다"라는 것만 확인하고자 한다면 "양측검정(two.sided)"로 설정하고, 크기까지 확인하고자 한다면 "단측검정(less.greater)"을 설정하면 된다. 예를 들면 "t.test(x,y,alternative={two.sided or less or greater})"으로 실행한다면 아래와 같은 의미를 갖게 되는 것이다.
+### -two.sided : A,B 집단이 같은지 비교
+### -less : A집단이 B집단보다 작은지 비교(=A집단 less than B집단)
+### -greater : A집단이 B집단보다 큰지 비교(=A집단 greater than B 집단)
+
+<br>
+<br>
+
+## 6)그래서 학원수업 수강은 성적향상에 영향이 있는가?
+
+```{r}
+t.test(before_study, after_study, paired=TRUE)
+```
+
+<br>
+
+### p-value 값이 0.05(유의수준 5% 기준)보다 작기 때문에 대립가설을 채택할 수 있고, 이를 토대로 "학원수강 전/후 점수에는 통계적으로 의미 있는 차이가 존재한다"라고 판단이 가능하다. 이 결과는 대립가설에서 확인할 수 있듯이 단지 두 그룹 간에 점수 차이가 존재한다는 것만 확인한 상태이다. 즉 수강 후 성적이 오른 것인지 떨어진 것인지에 대한 판단은 아니라는 의미이다. 대립가설이 저렇게 나온 이유는 t-test()함수의 "alternative"의 기본값이 "two.sided"가 적용되기 때문이다. 그렇다면 이번에는 "수강 후 학생들의 성적이 올랐는가?"를 알아보자.
+
+<br>
+
+```{r}
+t.test(before_study, after_study, paired=TRUE, alternative = "less")
+```
+
+<br>
+
+### p-value 값이 0.05보다 작기 때문에 대립가설을 채택할 수 있고, **"학생들의 점수는 통계적으로 유의미하게 향상됐다."** 라는 해석이 가능하다. 여기서 주의할 점은 p-value가 “다르다/크다/작다를 구분할 수 있는 가능성”이 얼마나 높은지에 대한 정보를 제공할 뿐이지 p-value의 크고 작음이 두 집단 간 평균값 차이의 크다/작다를 의미하지 않는다는 것이다. 다시 말해 대립가설 “점수가 향상됐다”에 p-value가 0.000000001 이라고 한다면 “점수가 향상됐다고 볼 가능성이 매우 높다” 라는 의미는 되지만 “점수가 크게 향상됐다”를 의미하지는 않는 다는 것이다.
+
+<br>
+
+### 이번에는 alternative 값을 "greater"로 설정한 후 t-test() 함수를 실행해보도록 하겠습니다.
+
+<br>
+
+```{r}
+t.test(before_study, after_study, paired = TRUE, alternative = "greater")
+```
+
+<br>
+
+### 이 경우에는 p-value가 0.9801로 0.05보다 월등히 크므로 대립가설을 채탤할 수 없다. 즉 수강 후 점수가 떨어졌다는 가설은 기각이 되는 셈이다.
+
+---
+
+<br>
+## 첨부:증감표 테이블
+
+<br>
+
+```{r}
+# 증감표 테이블
+study_compare %>% 
+  mutate(Difference = after_study - before_study) %>%
+  mutate(Change = case_when(
+    Difference > 0 ~ "증가",
+    Difference < 0 ~ "감소",
+    TRUE ~ "변동없음"
+  )) %>%
+  formattable(., list(
+    Difference = formatter("span", style = x ~ ifelse(x > 0,
+                       style(color = "Green", font.weight = "bold"), ifelse(x < 0,
+                                                                            style(color = "red"),NA))),
+    Change = formatter("span", style = x ~ ifelse(x == "증가",
+                       style(color = "Green", font.weight = "bold"), ifelse(x == "감소",
+                                                                            style(color = "red"),NA)))
+    )
+    )
+```
+
+
+
+
+
