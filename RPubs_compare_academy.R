@@ -1,5 +1,3 @@
-install.packages("formattable")
-
 
 library(ggplot2)
 library(formattable)
