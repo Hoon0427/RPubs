@@ -1,7 +1,7 @@
 ---
 title: "Titanic 생존분석"
 author: "HooN"
-date: "20-02-26"
+date: "`r Sys.time()`"
 output: 
   html_document:
     highlight: textmate
@@ -15,6 +15,12 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+<p align="center">
+  <img src="https://storage.googleapis.com/kaggle-media/welcome/screen1.png"><br>
+  <b>Github Code: [Hoon0427/RPubs](https://github.com/Hoon0427/RPubs/blob/master/RPubs_titanic.Rmd) <br>
+  <b>File Download: [Titanic Data](https://www.kaggle.com/c/titanic/data)</b><br>
+</p>
 
 
 # Titanic 생존 분석
@@ -46,9 +52,6 @@ library(e1071)   #혼동행렬 패키지
 library(randomForest)  #Random Forest 패키지
 ```
 
-
-
-#### [자료다운받기](https://www.kaggle.com/c/titanic/data)
 
 
 ```{r}
