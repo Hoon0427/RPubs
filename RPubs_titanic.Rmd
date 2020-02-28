@@ -225,8 +225,8 @@ training_set$Ages <-
 
 ggplot(training_set, aes(x = Ages)) +
   geom_bar() +
-  theme(axis.text.x = element_text(size=20)) +
-  theme(axis.text.y = element_text(size=20))
+  theme(axis.text.x = element_text(size=10)) +
+  theme(axis.text.y = element_text(size=10))
 ```
 
 <br>
@@ -262,7 +262,7 @@ ggplotly(ggplot_data, height = 500, width=800)
 
 <br>
 
-#### Pclass에 따른 생존여부에서 사망자으ㅣ수는 Pclass등급에 따라 어느정도 차이를 보이고 있으너, 왼쪽 생존자 막대 그래프에서는 등급에 따른 큰 차이를 보이지 않고 있습니다.
+#### Pclass에 따른 생존여부에서 사망자의 수는 Pclass등급에 따라 어느정도 차이를 보이고 있으며, 왼쪽 생존자 막대 그래프에서는 등급에 따른 큰 차이를 보이지 않고 있습니다.
 
 ```{r}
 ggplot_data <- ggplot(training_set, aes(x = Survived, fill = Pclass)) +
