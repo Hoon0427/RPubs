@@ -1,0 +1,285 @@
+---
+title: "모델별 iris 데이터 분류"
+author: "HooN"
+date: "`r Sys.time()`"
+output: 
+  html_document:
+    highlight: textmate
+    theme: default
+    toc: true
+    toc_float: true
+    code_folding: show
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<br>
+
+#### iris 데이터를 가지고 몇 개의 모델을 실행해보겠습니다. 'Species' 분류에 있어서 정확도가 가장 높은 모델을 채택하겠습니다. <br>
+
+## 1.탐색적 데이터 분석(EDA)
+
+<br>
+
+#### 분석에 앞서 가장 먼저 해야할 것은 데이터의 구조를 파악하는 것입니다. <br>  여기서 데이터는 training_set을 기준으로 파악할 것이며, 먼저 'Species'를 분류하는데 어떤 데이터가 필요한지 확인하겠습니다.
+
+<br>
+
+### 1) 패키지설치 / library 활성화
+
+```{r message=FALSE}
+library(kernlab) # Surport Vector Machine
+library(nnet) # Logistic regression, Neural Network
+library(rpart) # Decision Tree
+library(randomForest) # Random Forest
+```
+
+```{r message=FALSE}
+library(dplyr) # Data Handling
+```
+
+```{r message=FALSE}
+library(caret) # Confusion Matrix
+```
+
+```{r message=FALSE}
+library(DT) # Data Visualize
+library(class) # KNN
+library(ggvis) # Data visualize
+```
+
+<br>
+
+### 2) 데이터 시각화
+
+<br>
+
+#### 시각화를 통해 'Petal.Length'와 Petal.Width'가 선형성 구조를 보이고 있으므로, 이를 통해 분석에 적합성을 가지고 있다는 사실을 알 수 있습니다.
+
+```{r}
+plot(iris)
+```
+
+<br>
+
+#### 그래프를 통해 보는 바와 같이 'Setosa'의 데이터가 가장 정확하게 분류되는 것을 확인할 수 있습니다.
+
+```{r}
+iris %>% ggvis(~Petal.Length, ~Petal.Width, fill = ~factor(Species)) %>%
+  layer_points()
+```
+
+<br>
+
+### 3) 데이터 구조 파악
+
+<br>
+
+str()함수를 통해 iris 데이터의 구조를 확인해보겠습니다.
+```{r}
+str(iris)
+```
+
+### 4) 통계적 수치 파악
+
+<br>
+
+#### iris 데이터의 통계적 수치를 확인해보겠습니다.
+
+```{r}
+summary(iris)
+```
+
+### 5) 결측치 확인
+
+<br>
+
+#### 결측치 유무를 확인해보겠습니다.
+
+```{r}
+sum(is.na(iris))
+```
+
+## 2.데이터 처리
+
+<br>
+
+seed 값을 설정해주고, sampling과 set 데이터를 만들어주겠습니다.
+
+```{r}
+# 데이터 할당 
+df <- iris
+
+# seed값 설정
+set.seed(919)
+
+# training / test sampling
+training_sampling <- sort(sample(1:nrow(df), nrow(df) * 0.7 ))
+test_sampling <- setdiff(1: nrow(df), training_sampling)
+
+# training / test set
+training_set <- df[training_sampling,]
+test_set <- df [test_sampling,]
+```
+
+
+<br>
+
+## 3.머신러닝 모델 생성
+
+<br>
+
+#### Training/ Test set을 나눴으니 이제 학습을 시켜보겠습니다. 모델은 Logistic regression, Decision Tree, Random Forest를 사용했습니다.
+
+<br>
+
+### 1)Logistic regression을 이용한 분류
+
+<br>
+
+#### 이번에는 로지스틱 회귀분석을 하려고 합니다. 간단히 말하자면 데이터를 분류할 때 선형분류기를 사용하여 이진분류를 하는것이 로지스틱 분석의 핵심입니다.
+
+```{r}
+multi_logit_m <- multinom(Species ~ Petal.Length + Petal.Width, data = training_set)
+```
+
+```{r}
+multi_logit_p <- predict(multi_logit_m, newdata = test_set, type = "class")
+```
+
+### 2) Decision tree를 이용한 분류
+
+<br>
+
+#### 의사결정 나무 기법을 사용한 iris 분류를 하겠습니다. 의사결정 나무란, 데이터를 나무가 가지치듯이 차례차례 분류하여 최종적으로 분류하는 모델읠 뜻합니다. rpart패키지를 불러와 rpart 함수를 사용하여 Decision tree를 생성해보겠습니다.
+
+```{r}
+rpart_m <- rpart(Species ~ Petal.Length + Petal.Width, data = training_set)
+
+rpart_p <- predict(rpart_m, newdata = test_set, type = "class")
+```
+
+<br> 
+
+### 3)Random Forest를 이용한 분류
+
+<br>
+
+앙상블 기법의 일종으로 여러가지 기술을 가진 의사결정 나무들이 모여있는 형태라고 볼 수 있습니다. randomForest패키지의 randomForest함수를 사용하여 Random Forest 모델을 만들어보겠습니다.
+
+```{r}
+rf_m <- randomForest(Species ~ Petal.Length + Petal.Width, data = training_set)
+rf_p <- predict(rf_m, newdata = test_set, type = "class")
+```
+
+<br>
+
+### 4)Support Vector Machine을 이용한 분류
+
+<br>
+
+#### 이번에는 Support Vector Machine을 이용해 분류를 하겠습니다. <br> SVM(Support Vector Machine)이란 데이터 상에 있는 각 점들의 거리를 분석해 가장 먼 거리에 있는 점들을 기준으로 support vector를 형성하여 두 개의 support vector 중간에 초평면을 만들어 분류를 하는 방법입니다. 쉽게 말하면 두 점 사이의 거리가 최대가 되는 지점을 찾는 것입니다.
+
+```{r}
+svm_m <- ksvm(Species ~ Petal.Length + Petal.Width, data=training_set)
+svm_p <- predict(svm_m, newdata=test_set)
+```
+
+
+### 5)K-Nearest Neighbor을 이용한 분류
+
+<bR>
+
+#### 이번에는 KNN으로 분류를 하겠습니다. KNN이란 K-Nearest Neighbor의 점들에 주어진 가장 근접해있는 K근접이웃을 알아내는 과정입니다.
+
+```{r}
+normalizer <- function(x) {
+  return_value <- (x - min(x)) / (max(x) - min(x))
+return(return_value)
+}
+```
+
+
+```{r}
+normal_iris <- sapply(iris[,1:4], normalizer) %>% 
+  as.data.frame()
+
+# 데이터 생성
+df <- cbind(normal_iris, "Species" = iris[,5])
+
+# training / test sampling
+training_sampling <- sort(sample(1:nrow(df), nrow(df)* 0.7))
+test_sampling <- setdiff(1:nrow(df), training_sampling)
+
+# training_set, test_set
+training_set <- df[training_sampling,]
+test_set <- df[test_sampling,]
+
+training_set_unlable <- training_set[,1:4]
+training_set_lable <- training_set[,5]
+
+test_set_unlable <- test_set[,1:4]
+test_set_lable <- test_set[,5]
+
+knn_p <- knn(train = training_set_unlable, test = test_set_unlable, cl = training_set_lable, k =3)
+
+```
+
+<br> 
+
+## 4. 모델 평가
+
+<br>
+
+#### 각각의 모델을 평가해보겠습니다. 평가 항목은 정확도로 할 것이며, 이중에서 가장 좋은 모델을 채택하겠습니다.
+
+```{r}
+model_list <- cbind(
+  as.character(multi_logit_p),
+  as.character(rpart_p),
+  as.character(rf_p),
+  as.character(svm_p),
+  as.character(knn_p) %>% 
+  as.data.frame()
+)
+
+# str(model_list)
+
+total_model_accuracy <- data.frame()
+for (model in model_list[, 1:ncol(model_list)]) {
+  model_cm <- confusionMatrix(model, test_set$Species)
+  model_cm_class <- model_cm$byClass %>% as.data.frame()
+  model_accuracy <- model_cm_class$'Balanced Accuracy'
+  total_model_accuracy <- rbind(total_model_accuracy, model_accuracy)
+  
+}
+
+colnames(total_model_accuracy) <- levels(test_set$Species)
+rownames(total_model_accuracy) <- c("Logistic Regression", "Decision Tree",
+                                    "Random Forest", "Support Vector Machine","KNN")
+```
+
+<br> 
+
+## 5.모델의 정확도 비교 테이블
+
+<br>
+
+####예측값, 실측값의 비교를 위해 각 모델별 분류에 대한 정확도 베교테이블입니다.
+
+```{r}
+datatable(total_model_accuracy)
+```
+
+<br>
+
+#### 결과
+#### 이렇게 5가지의 모델로 iris 데이터를 분류했고, 정확도는 전반적으로 높은 수준으로 확인됐습니다. 그러나 당장 위의 수치만으로는 어떤 모델이 더 좋다라는 것을 판단하기에는 무리가 있고, R에서 교과서와 같은 iris 데이터로 분석을 했기 때문에, 명확한 결과값을 얻을 수 있었습니다. 다양한 구조의 데이터들이 존재하기때문에 정확하고 유의미한 결과물을 얻기 위해서는 다양한 모델들의 개념과 특성을 알아야하며, 주어진 데이터를 분석키 위해서는 어떠한 모델을 사용하고 그 속에서 사용되는 여러가지 옵션들을 잘 다룰 수 있는 역량을 갖추어야 한다고 생각합니다.
+
+
+
+
+

@@ -78,7 +78,6 @@ model_list <- cbind(
 )
 
 #str(model_list)
-install.packages("e1071")
 
 
 total_model_accuracy <- data.frame()
