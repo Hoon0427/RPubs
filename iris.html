@@ -6633,11 +6633,15 @@ div.tocify {
 
 <h1 class="title toc-ignore">모델별 iris 데이터 분류</h1>
 <h4 class="author">HooN</h4>
-<h4 class="date">2020-02-28 19:18:07</h4>
+<h4 class="date">2020-03-01 12:25:46</h4>
 
 </div>
 
 
+<br>
+<p align="center">
+<p><a href="https://github.com/Hoon0427/RPubs/blob/master/iris.Rmd">Hoon0427/RPubs</a> <br></p>
+<p></p>
 <p><br></p>
 <div id="iris-데이터를-가지고-몇-개의-모델을-실행해보겠습니다.-species-분류에-있어서-정확도가-가장-높은-모델을-채택하겠습니다." class="section level4">
 <h4>iris 데이터를 가지고 몇 개의 모델을 실행해보겠습니다. ‘Species’ 분류에 있어서 정확도가 가장 높은 모델을 채택하겠습니다. <br></h4>
@@ -6675,27 +6679,27 @@ library(ggvis) # Data visualize</code></pre>
 <h4>그래프를 통해 보는 바와 같이 ’Setosa’의 데이터가 가장 정확하게 분류되는 것을 확인할 수 있습니다.</h4>
 <pre class="r"><code>iris %&gt;% ggvis(~Petal.Length, ~Petal.Width, fill = ~factor(Species)) %&gt;%
   layer_points()</code></pre>
-<div id="plot_id258122055-container" class="ggvis-output-container">
-<div id="plot_id258122055" class="ggvis-output"></div>
+<div id="plot_id579860059-container" class="ggvis-output-container">
+<div id="plot_id579860059" class="ggvis-output"></div>
 <div class="plot-gear-icon">
 <nav class="ggvis-control">
 <a class="ggvis-dropdown-toggle" title="Controls" onclick="return false;"></a>
 <ul class="ggvis-dropdown">
 <li>
 Renderer: 
-<a id="plot_id258122055_renderer_svg" class="ggvis-renderer-button" onclick="return false;" data-plot-id="plot_id258122055" data-renderer="svg">SVG</a>
+<a id="plot_id579860059_renderer_svg" class="ggvis-renderer-button" onclick="return false;" data-plot-id="plot_id579860059" data-renderer="svg">SVG</a>
  | 
-<a id="plot_id258122055_renderer_canvas" class="ggvis-renderer-button" onclick="return false;" data-plot-id="plot_id258122055" data-renderer="canvas">Canvas</a>
+<a id="plot_id579860059_renderer_canvas" class="ggvis-renderer-button" onclick="return false;" data-plot-id="plot_id579860059" data-renderer="canvas">Canvas</a>
 </li>
 <li>
-<a id="plot_id258122055_download" class="ggvis-download" data-plot-id="plot_id258122055">Download</a>
+<a id="plot_id579860059_download" class="ggvis-download" data-plot-id="plot_id579860059">Download</a>
 </li>
 </ul>
 </nav>
 </div>
 </div>
 <script type="text/javascript">
-var plot_id258122055_spec = {
+var plot_id579860059_spec = {
   "data": [
     {
       "name": ".0",
@@ -6842,7 +6846,7 @@ var plot_id258122055_spec = {
   },
   "handlers": null
 };
-ggvis.getPlot("plot_id258122055").parseSpec(plot_id258122055_spec);
+ggvis.getPlot("plot_id579860059").parseSpec(plot_id579860059_spec);
 </script>
 <p><br></p>
 </div>
