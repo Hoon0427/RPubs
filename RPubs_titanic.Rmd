@@ -223,8 +223,13 @@ training_set$Ages <-
   factor(training_set$Ages,
          levels = c("Under 10", "10 ~ 20", "20 ~ 30", "30 ~ 40", "40 ~ 50", "50 ~ 60", "over 60"))
 
-ggplot(training_set, aes(x = Ages)) +
-  geom_bar() +
+data_cleanging <- training_set %>% 
+  group_by(Ages) %>% 
+  summarise(Ages_count = n())
+
+ggplot(data_cleanging, aes(x = Ages, y = Ages_count, fill=Ages)) +
+  geom_col() +
+  geom_text(aes(label=(Ages_count)), vjust=3, hjust = 0.5,color="black", size=4) +
   theme(axis.text.x = element_text(size=10)) +
   theme(axis.text.y = element_text(size=10))
 ```
