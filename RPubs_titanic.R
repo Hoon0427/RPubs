@@ -60,8 +60,12 @@ training_set<-training_set%>%mutate(Ages=case_when(
 training_set$Ages <- factor(training_set$Ages, levels = c("Under 10", "10~20", "20~30", "30~40", "40~50", "50~60", "over 60"))
 ggplot(training_set, aes(x=Ages)) +
   geom_bar() +
+##  geom_text(aes(label=Ages), vjust=0.5, hjust = 3,color="black", size=4) +
   theme(axis.text.x = element_text(size= 20 )) +
   theme(axis.text.y = element_text(size = 20 ))
+
+
+table(training_set$Ages)
 
 ggplot_data <- ggplot(training_set, aes(x=Survived, fill = Sex)) +
   geom_bar() +
