@@ -18,10 +18,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 <p align="center">
   ![쉽게 배우는 r 데이터 분석](C:\Users\ikaar\Desktop\01.jpg)<br>
-  <b>Github Code: [Hoon0427/RPubs](https://github.com/Hoon0427/RPubs/blob/master/RPubs_compare_markdown.Rmd) <br>
+  <b>Github Code: [Hoon0427/RPubs](https://github.com/Hoon0427/RPubs/blob/master/RPubs_NewPts.Rmd)</b><br>
 </p>
-
-<p/>
 
 <br>
 
