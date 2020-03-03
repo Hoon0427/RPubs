@@ -18,8 +18,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 <p align="center">
   <img src="https://storage.googleapis.com/kaggle-media/welcome/screen1.png"><br>
-  <b>Github Code: [Hoon0427/RPubs](https://github.com/Hoon0427/RPubs/blob/master/RPubs_titanic.Rmd) <br>
-  <b>File Download: [Titanic Data](https://www.kaggle.com/c/titanic/data)</b><br>
+  <b>Github Code: [Hoon0427/RPubs](https://github.com/Hoon0427/RPubs/blob/master/RPubs_titanic.Rmd){target="_blank"} <br>
+  <b>File Download: [Titanic Data](https://www.kaggle.com/c/titanic/data){target="_blank"} </b><br>
 </p>
 
 

@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 <p align="center">
   ![시작하세요. 데이터분석 with R](C:\MyRCode\RPubs\Main.jpg)<br>
-  <b>Github Code: [Hoon0427/RPubs](https://github.com/Hoon0427/RPubs/blob/master/RPubs_compare_markdown.Rmd) <br>
+  <b>Github Code: [Hoon0427/RPubs](https://github.com/Hoon0427/RPubs/blob/master/RPubs_compare_markdown.Rmd){target="_blank"} <br>
 </p>
 
 
