@@ -1,0 +1,145 @@
+---
+title: "대한민국 시도별 인구, 결핵 환자 수 단계 구분도 만들기"
+author: "HooN"
+date: "`r Sys.time()`"
+output: 
+  html_document:
+    highlight: textmate
+    theme: default
+    toc: true
+    toc_float: true
+    code_folding: show
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<p align="center">
+  ![쉽게 배우는 r 데이터 분석](C:\Users\ikaar\Desktop\01.jpg)<br>
+  <b>Github Code: [Hoon0427/RPubs](https://github.com/Hoon0427/RPubs/blob/master/RPubs_compare_markdown.Rmd) <br>
+</p>
+
+<p/>
+
+<br>
+
+#### 대한민국의 인구통계와 지도 데이터를 이용해 단계 구분도를 만들어 보겠습니다.
+
+<br>
+
+# 대한민국 시도별 인구 단계 구분도 만들기
+
+<br>
+
+#### kormaps2014 패키지를 이용하면 대한민국의 지역 통계 데이터와 지도 데이터를 사용할 수 있습니다.
+  
+<br>
+
+## 1. 패키지 준비하기
+
+<br>
+
+#### 먼저 kormaps2014 패키지를 이용하는데 필요한 stringi 패키지를 설치하겠습니다. 그런 다음, devtools 패키지를 설치한 후 install_github()를 이용해 패키지 개발자가 깃허브에 공유한 kormaps2014 패키지를 설치하고 로드하겠습니다.
+
+```{r}
+#install.packages("stringi")
+#install.packages("devtools")
+#devtools::install_github("cardiomoon/kormaps2014")
+
+library(DT)
+library(kormaps2014)
+```
+
+
+<br>
+
+## 2.대한민국 시도별 인구 데이터 준비하기
+
+<br>
+
+#### kormaps2014 패키지에는 몇 가지 종류의 지역별 인구통계 데이터가 들어 있습니다. 이 중 시도별 인구통계 정보가 담겨있는 korpop1 데이터를 이용해 시도별 인구 단계 구분도를 만들겠습니다.
+
+<br>
+
+#### 먼저 str()로 변수를 살펴보겠습니다. korpop1 데이터의 인코딩이 UTF-8로 되어 있어서 윈도우에서는 한글 문자가 꺠져 보입니다. kormaps2014 패키지의 changeCode()를 이용해 인코딩을 CP949로 변환한 후 str()에 적용하면 한글이 깨지지 않고 출력됩니다.
+
+```{r}
+str(changeCode(korpop1))
+```
+
+<br>
+
+## 3. 변수명이 한글로 되어 있으면 오류가 발생할 수 있습니다. 오류를 막기 위해 분석에 사용할 변수명을 영문자로 바꾸겠습니다.
+
+```{r message=FALSE}
+library(dplyr)
+korpop1 <- rename(korpop1, pop = 총인구_명, name = 행정구역별_읍면동)
+```
+
+<br>
+
+## 4. 대한민국 시도 지도 데이터 준비하기
+
+<br>
+
+#### kormaps2014 패키지에는 몇 가지 종류의 지도 데이터가 들어 있습니다. 이 중 시도별 위도, 경도 정보를 담고 있는 kormap1을 지도 데이터로 이용하겠습니다.
+
+```{r}
+str(changeCode(korpop1))
+```
+
+<br>
+
+## 5. 단계 구분도 만들기
+
+<br>
+
+#### korpop1 데이터의 시도별 인구 변수와 kormap1의 시도별 위경도 데이터를 이용해 단계 구분도를 만들겠습니다. 지역 기준이 되는 code 변수가 숫자 코드로 되어 있기 때문에 지도에 마우스 커서를 올리면 코드가 표시됩니다. 코드 대신 지역명이 표시되도록 tooltip에 지역명 변수 name을 지정하겠습니다. 코드를 실행하면 뷰어 창에 단계 구분도가 생성됩니다. 지도 위에 마우스 커서를 올리면 해당 지역의 인구가 표시됩니다.
+
+
+```{r message=FALSE}
+#install.packages("ggiraphExtra")
+library(ggiraphExtra)
+library(ggplot2)
+
+str(changeCode(korpop1))
+
+korpop1$name <- iconv(korpop1$name, "UTF-8","CP949")
+
+ggChoropleth(data = korpop1,      # 지도에 표현할 데이터
+             aes(fill = pop,      # 색깔로 표현할 변수
+                 map_id = code,   # 지역 기준 변수
+                 tooltip = name), # 지도 위에 표시할 지역명
+             map = kormap1,       # 지도 데이터
+             interactive = T)     # 인터랙티브
+```
+
+
+<br> 
+
+#### **korpop1 $name <- iconv(korpop1 $name, "UTF-8","CP949")** 을 사용하지 않으면 지도의 한글 깨짐 현상이 발생하여 해당 함수를 사용했습니다.
+
+<br>
+
+# 대한민국 시도별 결핵 환자 수 단계 구분도 만들기
+
+<br>
+
+#### kormaps2014 패키지에는 지역별 결핵 환자 수에 대한 정보를 담고 있는 tbc 데이터가 있습니다. 이번에는 tbc 데이터의 NewPts(결핵 환자 수) 변수를 이용해 시도별 결핵 환자 수 단계 구분도를 만들어 보겠습니다.
+
+```{r}
+str(changeCode(tbc))
+
+tbc$name <- iconv(tbc$name, "UTF-8", "CP949")
+
+ggChoropleth(data = tbc,          # 지도에 표현할 데이터
+             aes(fill = NewPts,   # 색깔로 표현할 변수
+                 map_id = code,   # 지역 기준 변수
+                 tooltip = name), # 지도 위에 표시할 지역명
+             map = kormap1,       # 지도 데이터
+             interactive = T)     # 인터랙티브
+```
+
+
