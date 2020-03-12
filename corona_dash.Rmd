@@ -1,0 +1,316 @@
+---
+title: "코로나 데이터 시각화 대쉬보드"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    logo: main3.png
+    theme: sandstone
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+
+library(kormaps2014)
+
+library(corona19)
+library(DT)
+library(readxl)
+library(tidyverse)
+library(ggiraphExtra)
+library(ggplot2)
+library(patchwork)
+library(plotly)
+library(gganimate)
+library(formattable)
+```
+
+
+대한민국 코로나 데이터 파악
+=======================================================================
+
+Column {data-width=550}
+-----------------------------------------------------------------------
+
+### 2020 시도별 인구 현황
+
+```{r fig.width=12}
+# 대한민국 인구 데이터 추출
+
+theme_set(theme_bw())
+
+korpop1 <- rename(korpop1, pop = 총인구_명, name = 행정구역별_읍면동)
+
+korpop1$name <- iconv(korpop1$name, "UTF-8","CP949")
+
+population <- read_xls("population_x.xls")
+
+# str(changeCode(korpop1))
+
+# korpop1$name <- iconv(korpop1$name, "UTF-8","CP949")
+
+population <- population[,c(1,8)]
+
+colnames(population) <- c("name", "총인구수")
+
+population <- population[-c(1:2),]
+
+korpop2020 <- korpop1 %>%
+  left_join(population) %>%
+  select(C행정구역별_읍면동, name, C행정구역별, code, 총인구수) %>%
+  rename(pop2020 = 총인구수)
+
+korpop2020$시점 <- 2020
+korpop2020$pop2020 <- as.numeric(korpop2020$pop2020)
+
+
+# 코로나 데이터 추출
+corona_0301 <- read_xlsx("corona19_kr_20200301.xlsx")
+
+
+corona_0301 <- corona_0301 %>% 
+  select(구분, `확진환자 (명)`,`검사현황 (명)`) %>% 
+  filter(!구분 %in% c(NA,"합계", "검역"))
+
+tbc$name <- iconv(tbc$name, "UTF-8", "CP949")
+
+colnames(tbc)[1] <- "구분"
+
+tbc_unique <- tbc %>% 
+  select(구분, name) %>% 
+  unique() 
+
+tbc_unique$구분 <- str_sub(tbc_unique$name,1,2)
+
+
+tbc_unique$구분[tbc_unique$구분 %in% c("경상","전라","충청")] <- c("경남","경북","전남","전북","충남","충북")
+
+corona_0301 <- corona_0301 %>%
+  left_join(tbc_unique) %>%
+  select(name, `확진환자 (명)`,`검사현황 (명)`)
+
+kor_pop_corona <- korpop2020 %>%
+  left_join(corona_0301) %>%
+  rename(pop_corona = `확진환자 (명)`)
+
+kor_pop_corona$pop_corona <- as.numeric(kor_pop_corona$pop_corona)
+kor_pop_corona$`검사현황 (명)` <- as.numeric(kor_pop_corona$`검사현황 (명)`)
+
+# kor_pop_corona %>%
+#   rename(총인구수 = pop2020, 확진자 = pop_corona, 행정구역 = name) %>%
+#   select(시점,총인구수,  확진자, 행정구역) %>%
+#   datatable(rownames = FALSE)
+
+
+##########################
+# 
+# corona_flow <- read_xlsx("corona19-kr.xlsx")
+# 
+# corona_flow_2 <- corona_flow %>%
+#   filter(location != "검역" & state1 == "확진") %>%
+#   rename(Day = "datetime(kst)") %>%
+#   group_by(Day, location, state1) %>%
+#   summarise(count = sum(count))
+# 
+# datebreaks <- seq(as.Date(head(corona_flow_2$Day,1)), as.Date(tail(corona_flow_2$Day,1)), by="1 day")
+# 
+# 
+# p <- corona_flow_2 %>%
+#   ggplot(aes(Day, count, group = location, color = factor(location))) +
+#   geom_line() +
+#   scale_color_viridis_d() +
+#   labs(x = "", y = "") +
+#   theme(axis.text.x = element_text(angle=30, hjust=1)) +
+#   theme(legend.position = "none") 
+# 
+# 
+# pp <- p + geom_point() +
+#   geom_text( aes(y = count+1,label=paste0(location, " (",count,"명)")), size=6, vjust=1, hjust=1.1)
+# 
+# pp
+# ggplotly(pp)
+
+# 
+# 
+# + facet_wrap(~location, ncol=4)+
+#   
+#   geom_text( aes(y = count+1,label=paste0(location, " (",count,"명)")), size=3, vjust=1, hjust=1.1)
+
+# +
+  # transition_reveal(Day)
+
+kor_pop_corona_2 <- kor_pop_corona %>% 
+  gather(key = "case", value = "pops", `pop2020`,`pop_corona`)
+
+p1 <- ggplot(data = kor_pop_corona) +
+  geom_col(aes(x = name, y = pop2020, fill = pop2020)) +
+  scale_y_continuous(labels = scales::comma) +
+  theme(axis.text.x = element_text(size = 10, angle=30, hjust=1)) +
+  labs(title = "시도별 인구(2020년 기준)", x = "지역(시도)", y = "", fill = "인구")
+
+p1
+```
+
+### 시도별 코로나 확진자 현황 
+
+
+```{r fig.width=12}
+
+
+p2 <- ggplot(data = kor_pop_corona) +
+  geom_col(aes(x = name, y = `검사현황 (명)`, fill = `검사현황 (명)`)) +
+  theme(axis.text.x = element_text(size = 10, angle=30, hjust=1)) +
+  labs(title = "시도별 코로나 검사자", x = "지역(시도)", y = "", fill = "검사자")
+
+p3 <- ggplot(data = kor_pop_corona) +
+  geom_col(aes(x = name, y = pop_corona, fill = pop_corona)) +
+  theme(axis.text.x = element_text(size = 10, angle=30, hjust=1)) +
+  labs(title = "시도별 코로나 확진자", x = "지역(시도)", y = "", fill = "확진자")
+  
+ p3
+```
+
+
+
+Column {data-width=450}
+-----------------------------------------------------------------------
+
+### 2020년 시도별 인구 현황 지도
+
+```{r}
+ggChoropleth(data = korpop2020,      # 지도에 표현할 데이터
+             aes(fill = pop2020,      # 색깔로 표현할 변수
+                 map_id = code,   # 지역 기준 변수
+                 tooltip = name), # 지도 위에 표시할 지역명
+             map = kormap1,       # 지도 데이터
+              color = "grey50",
+             interactive = T)
+```
+
+### 시도별 코로나 확진자 현황 지도
+
+```{r}
+ggChoropleth(data = kor_pop_corona,      # 지도에 표현할 데이터
+             aes(fill = pop_corona,      # 색깔로 표현할 변수
+                 map_id = code,   # 지역 기준 변수
+                 tooltip = name), # 지도 위에 표시할 지역명
+             map = kormap1,       # 지도 데이터
+              color = "grey50",
+             interactive = T)
+```
+
+
+COVID19 Graph
+=======================================================================
+
+Row {data-height=650}
+-----------------------------------------------------------------------
+
+### Graph
+
+```{r fig.width=20, fig.height=10}
+corona_flow <- read_xlsx("corona19-kr.xlsx")
+
+corona_flow_2 <- corona_flow %>%
+  filter(location != "검역" & state1 == "확진") %>%
+  rename(Day = "datetime(kst)") %>%
+  group_by(Day, location, state1) %>%
+  summarise(count = sum(count))
+
+datebreaks <- seq(as.Date(head(corona_flow_2$Day,1)), as.Date(tail(corona_flow_2$Day,1)), by="1 day")
+
+
+p <- corona_flow_2 %>%
+  ggplot(aes(Day, count, group = location, color = factor(location))) +
+  geom_line() +
+  scale_color_viridis_d() +
+  labs(x = "", y = "") +
+  theme(axis.text.x = element_text(angle=30, hjust=1)) +
+  theme(legend.position = "none")
+
+p + facet_wrap(~location, ncol=4)+
+  geom_point() +
+  geom_text( aes(y = count+1,label=paste0(count,"명")), size=6, vjust=0.55, hjust=1.1) +
+  theme(  axis.title = element_text( size = 16, face = "bold" ),
+          strip.text = element_text(size = 20))
+
+# +
+  # transition_reveal(Day)
+```
+
+
+
+Data Table
+=======================================================================
+
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### 시도별 코로나 확진자 테이블 
+
+```{r}
+kor_pop_corona$pop2020 <- formattable ::comma(as.numeric(kor_pop_corona$pop2020),0) %>% as.character()
+kor_pop_corona$pop_corona <- formattable ::comma(as.numeric(kor_pop_corona$pop_corona),0) %>% as.character()
+kor_pop_corona$`검사현황 (명)` <- formattable ::comma(as.numeric(kor_pop_corona$`검사현황 (명)`),0) %>% as.character()
+           
+kor_pop_corona %>%
+  select(시점, name,pop2020, pop_corona, `검사현황 (명)`) %>%
+  rename(지역명 = name, 총인구 = pop2020, 확진자 = pop_corona, 검사자 = `검사현황 (명)`) %>%
+  arrange(지역명) %>%
+    datatable(rownames = FALSE,
+              options = list(
+  pageLength = 20
+))
+
+```
+
+Column {data-width=500}
+-----------------------------------------------------------------------
+
+### 시도별 날짜별 코로나 증가 현황
+
+```{r}
+corona_flow_2$count <- formattable ::comma(as.numeric(corona_flow_2$count),0) %>% as.character()
+
+
+corona_flow_2 %>% 
+  select(Day, location, count) %>% 
+  rename(날짜 = Day, 지역명 = location, 확진자 = count) %>% 
+  arrange(날짜, 지역명) %>% 
+      datatable(rownames = FALSE,
+              options = list(
+  pageLength = 17
+))
+
+```
+
+
+Reference 
+=======================================================================
+
+- 행정구역별 인구 데이터   <br>
+  - <a href ="http://kosis.kr/statHtml/statHtml.do?orgId=101&tblId=DT_1B040A3&vw_cd=&list_id=&scrId=&seqNo=&lang_mode=ko&obj_var_id=&itm_id=&conn_path=E1"target="_blank">KOSIS-행정구역(시군구)별, 성별 인구수</a>
+
+- 코로나 데이터 (시도별, 날짜별(2020-02-26~2020-03-01)) <br>
+  - <a href ="https://drive.google.com/drive/folders/1_bjm76OE2H2xluT0D3hScUjvON9DpWXr?fbclid=IwAR2vMDfXFmwqQ8rqZd9MZ2pWJLW02Fczu0o5IZRho66ctypMaT9ppz0YkdY"target="_blank">코로나 데이터</a>  
+
+- Kormaps 패키지를 사용한 대한민국 시각화 <br>
+  - <a href ="https://github.com/youngwoos/Doit_R/#91"target="_blank">Do it! 쉽게 배우는 R 데이터 분석 Github</a> <br>
+  - <a href ="http://web-r.org/webrboard/6477"target="_blank">Kormaps 패키지를 이용한 단계구분도 쉽게 그리기(1)</a> <br>
+  - <a href ="https://rstudio-pubs-static.s3.amazonaws.com/159305_23b365c6973b45d3b14f2a6adc1c71af.html"target="_blank">Kormaps 패키지를 이용한 단계구분도 쉽게 그리기(2)</a> <br>
+
+- gganimate & ggmap <br>
+  - <a href ="https://d4tagirl.com/2017/05/how-to-plot-animated-maps-with-gganimate"target="_blank">gganimate_map_rpubs</a> <br>
+  - <a href ="https://geocompr.robinlovelace.net/adv-map.html#animated-maps"target="_blank">Geocomputation with R</a> <br>
+    
+- 지리정보 API를 사용한 주소와 위도경도 추출 <br>
+  - <a href ="https://statkclee.github.io/spatial/geo-info-lonlat.html"target="_blank">공간통계를 위한 데이터 사이언스</a> <br>
+  
+- gganimate <br>
+  - <a href ="https://www.datanovia.com/en/blog/gganimate-how-to-create-plots-with-beautiful-animation-in-r/"target="_blank">gganimate_exam</a> <br>
+  - <a href ="https://github.com/thomasp85/gganimate"target="_blank">gganimate_github</a> <br>
+  - <a href ="https://gganimate.com/reference/index.html"target="_blank">gganimate_tutorial</a> <br>
+  
+- Advisory <br>
+  - https://unfinishedgod.github.io/docs/corona/corona.html#%EC%B0%B8%EA%B3%A0
